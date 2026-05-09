@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"gopkg.in/validator.v2"
@@ -63,6 +64,19 @@ func (s *service) GetAllMessages(ctx context.Context, input GetAllMessagesInput)
 }
 
 func (s *service) SendMessage(ctx context.Context, input ScheduleMessageInput) error {
+
+	if len(input.RecipientNumbers) == 0 {
+		return fmt.Errorf("recipient numbers cannot be empty")
+	}
+
+	if len(input.Content) == 0 {
+		return fmt.Errorf("message content cannot be empty")
+	}
+
+	if input.ScheduledSendingAt <= 0 || input.ScheduledSendingAt < time.Now().Unix() {
+		return fmt.Errorf("scheduled time must be in the future")
+	}
+
 	msg := Message{
 		ID:                 uuid.New().String(),
 		Content:            input.Content,
