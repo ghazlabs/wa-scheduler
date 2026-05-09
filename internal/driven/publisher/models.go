@@ -19,35 +19,3 @@ func (r RespSendMessage) String() string {
 	json, _ := json.Marshal(r)
 	return string(json)
 }
-
-type RespGetLoginQrCode struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-	Results struct {
-		QrDuration int    `json:"qr_duration"`
-		QrLink     string `json:"qr_link"`
-	} `json:"results"`
-}
-
-func (r *RespGetLoginQrCode) IsSessionAlreadyActive() bool {
-	return r.Code == "ALREADY_LOGGED_IN"
-}
-
-func (r RespGetLoginQrCode) String() string {
-	json, _ := json.Marshal(r)
-	return string(json)
-}
-
-type RespGetSession struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-	Results []struct {
-		Name   string `json:"name"`
-		Device string `json:"device"`
-	} `json:"results"`
-}
-
-func (r RespGetSession) String() string {
-	json, _ := json.Marshal(r)
-	return string(json)
-}

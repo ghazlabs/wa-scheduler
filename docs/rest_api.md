@@ -1,6 +1,6 @@
 # REST API
 
-For authenticating the call, client is expected to submit basic authentication using a predefined username and password. You can lookup the value of this key from `CLIENT_USERNAME` and `CLIENT_PASSWORD` environment variable.
+For authenticating the call, client is expected to submit basic authentication using a predefined username and password. You can look up these values from the `DASHBOARD_CLIENT_USERNAME` and `DASHBOARD_CLIENT_PASSWORD` environment variables.
 
 **Table of contents:**
 

@@ -30,12 +30,6 @@ func (m *Message) String() string {
 	return string(jsonData)
 }
 
-type QrCodeLogin struct {
-	Session    bool   `json:"session"`
-	QrDuration int    `json:"qr_duration"`
-	QrLink     string `json:"qr_link"`
-}
-
 type ScheduleMessageInput struct {
 	Content            string   `json:"content"`
 	RecipientNumbers   []string `json:"recipient_numbers"`

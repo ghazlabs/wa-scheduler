@@ -71,7 +71,6 @@ func main() {
 	service, err := core.NewService(core.ServiceConfig{
 		Storage:   storage,
 		Scheduler: gocronScheduler,
-		Publisher: waPublisher,
 	})
 	if err != nil {
 		log.Fatalf("failed to create service: %v", err)

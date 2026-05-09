@@ -20,7 +20,7 @@ In our group, important messages often vanished into the noise — sent at odd h
 Available services:
 
 - `Server and Dashboard Service` => Handling dashboard and api requests from clients. For the API details see [this doc](./docs/rest_api.md).
-- `WhatsApp Publisher` => Whatsapp publisher service. This service is responsible for sending messages to WhatsApp. Right now it only support using [go-whatsapp-web-multidevice](https://github.com/aldinokemal/go-whatsapp-web-multidevice).
+- `WhatsApp Publisher` => External Whatsapp publisher service. This service is responsible for sending messages to WhatsApp. Right now the built-in adapter supports [go-whatsapp-web-multidevice](https://github.com/aldinokemal/go-whatsapp-web-multidevice), but WA Scheduler does not manage its login, session, or deployment.
 - `Storage` => This service is responsible for storing all the message state. The database schema is available [here](./docs/db/schema.sql). Currently, it only supports MySQL.
 
 ## Features
@@ -33,19 +33,22 @@ Available services:
 
 ### Locally (Docker)
 
-1. Run the following commands:
+1. Run and log in to your WhatsApp publisher outside this project.
+2. Run the following commands:
 
     ```bash
     git clone https://github.com/ghazlabs/wa-scheduler.git
 
-    make run
+    WA_PUBLISHER_API_BASE_URL=http://host.docker.internal:3000 \
+    WA_PUBLISHER_USERNAME=admin \
+    WA_PUBLISHER_PASSWORD=admin \
+      make run
     ```
 
-2. Open <http://localhost:9866> to access the dashboard
-3. Log in with username `admin` and password `admin`
-4. Scan the QR code to connect your WhatsApp account
-5. When the dashboard shows, you already can schedule message
-6. To get group recipients id, you need to check `List Groups` from the WhatsApp Publisher service on <http://localhost:3000>.
+3. Open <http://localhost:9866> to access the dashboard
+4. Log in with username `admin` and password `admin`
+5. Schedule messages from the dashboard
+6. To get group recipient ids, use your WhatsApp Publisher service directly.
 
 ### Production
 

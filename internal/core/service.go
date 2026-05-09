@@ -13,14 +13,11 @@ type Service interface {
 	GetAllMessages(ctx context.Context, input GetAllMessagesInput) ([]Message, error)
 	SendMessage(ctx context.Context, inputMsg ScheduleMessageInput) error
 	RetryMessage(ctx context.Context, input RetryMessageInput) error
-	GetLoginQrCode(ctx context.Context) (*QrCodeLogin, error)
-	GetSession(ctx context.Context) (bool, error)
 }
 
 type ServiceConfig struct {
 	Storage   Storage   `validate:"nonnil"`
 	Scheduler Scheduler `validate:"nonnil"`
-	Publisher Publisher `validate:"nonnil"`
 }
 
 type service struct {
@@ -54,24 +51,6 @@ func (s *service) InitializeService(ctx context.Context) {
 		}
 	}
 	fmt.Println("Service initialized and scheduled messages processed.")
-}
-
-func (s *service) GetLoginQrCode(ctx context.Context) (*QrCodeLogin, error) {
-	qrCode, err := s.Publisher.GetLoginQrCode(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve login qr code: %w", err)
-	}
-
-	return qrCode, nil
-}
-
-func (s *service) GetSession(ctx context.Context) (bool, error) {
-	session, err := s.Publisher.GetSession(ctx)
-	if err != nil {
-		return false, fmt.Errorf("failed to session: %w", err)
-	}
-
-	return session, nil
 }
 
 func (s *service) GetAllMessages(ctx context.Context, input GetAllMessagesInput) ([]Message, error) {

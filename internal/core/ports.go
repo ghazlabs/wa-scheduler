@@ -15,8 +15,3 @@ type Scheduler interface {
 	ScheduleMessage(ctx context.Context, message Message) error
 	RetryMessage(ctx context.Context, msg Message) error
 }
-
-type Publisher interface {
-	GetLoginQrCode(ctx context.Context) (*QrCodeLogin, error)
-	GetSession(ctx context.Context) (bool, error)
-}

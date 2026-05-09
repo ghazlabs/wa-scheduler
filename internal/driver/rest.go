@@ -49,8 +49,6 @@ func (a *API) GetHandler() http.Handler {
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 
 		r.Get("/check", a.serveCheckSystem)
-		r.Get("/whatsapp/login", a.serveLoginWa)
-		r.Get("/whatsapp/session", a.serveGetWaSession)
 		r.Get("/messages", a.serveGetMessages)
 		r.Post("/messages", a.serveScheduleMessage)
 		r.Post("/messages/{id}/retry", a.serveRetryMessage)
@@ -66,34 +64,6 @@ func (a *API) serveWebFrontend(w http.ResponseWriter, r *http.Request) {
 func (a *API) serveCheckSystem(w http.ResponseWriter, r *http.Request) {
 	resp := NewSuccessResp(RespCheck{
 		DefaultNumbers: a.DefaultNumbers,
-	})
-	render.Render(w, r, resp)
-}
-
-func (a *API) serveLoginWa(w http.ResponseWriter, r *http.Request) {
-	qrCode, err := a.Service.GetLoginQrCode(r.Context())
-	if err != nil {
-		render.Render(w, r, NewErrorResp(err))
-		return
-	}
-
-	resp := NewSuccessResp(RespLoginWa{
-		Session:    qrCode.Session,
-		QrLink:     qrCode.QrLink,
-		QrDuration: qrCode.QrDuration,
-	})
-	render.Render(w, r, resp)
-}
-
-func (a *API) serveGetWaSession(w http.ResponseWriter, r *http.Request) {
-	session, err := a.Service.GetSession(r.Context())
-	if err != nil {
-		render.Render(w, r, NewErrorResp(err))
-		return
-	}
-
-	resp := NewSuccessResp(RespSessionWa{
-		Session: session,
 	})
 	render.Render(w, r, resp)
 }
