@@ -1,0 +1,55 @@
+name: Bug report
+description: Something is broken or behaves incorrectly.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. If you plan to work on a fix, comment **`I will try to fix this`** on this issue (see [CONTRIBUTING.md](https://github.com/ghazlabs/wa-scheduler/blob/main/CONTRIBUTING.md)).
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One short sentence describing the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps others can follow. Include HTTP/API requests if relevant.
+      placeholder: |
+        1. …
+        2. …
+        3. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment (optional)
+      description: OS, Docker vs bare metal, browser if UI-related, commit/tag if known.
+
+  - type: checkboxes
+    id: claim
+    attributes:
+      label: Contributor workflow
+      options:
+        - label: I will comment **`I will try to fix this`** if I start working on a patch.

@@ -1,0 +1,10 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/ghazlabs/wa-scheduler/blob/main/CONTRIBUTING.md
+    about: Bug claims, feature approval workflow, and PR expectations.
+
+  - name: README — Getting started
+    url: https://github.com/ghazlabs/wa-scheduler/blob/main/README.md
+    about: Run the scheduler locally with Docker and env vars.

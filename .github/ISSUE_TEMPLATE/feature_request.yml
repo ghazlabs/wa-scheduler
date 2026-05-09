@@ -1,0 +1,46 @@
+name: Feature / UI suggestion
+description: Propose a new capability or dashboard/UI improvement.
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Before implementing:** please wait for maintainer approval on this issue. For visibility, mention **`@riandyn`** in your description below ([CONTRIBUTING.md](https://github.com/ghazlabs/wa-scheduler/blob/main/CONTRIBUTING.md)).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: What pain exists today? Who benefits?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Sketch the idea—behavior, UI, API implications if any.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered (optional)
+      description: Other approaches you thought about.
+
+  - type: textarea
+    id: mentions
+    attributes:
+      label: Maintainer ping
+      description: Paste **`@riandyn`** here (GitHub only notifies when in issue body / comments).
+      value: "@riandyn"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: agreement
+    attributes:
+      label: Checklist
+      options:
+        - label: I have read [CONTRIBUTING.md](https://github.com/ghazlabs/wa-scheduler/blob/main/CONTRIBUTING.md) for features/UI workflow.
