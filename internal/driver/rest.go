@@ -70,12 +70,6 @@ func (a *API) serveCheckSystem(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) serveGetMessages(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status")
-	if status != "" {
-		if status != string(core.MessageStatusScheduled) && status != string(core.MessageStatusSent) {
-			render.Render(w, r, NewErrorResp(NewBadRequestError("invalid status")))
-			return
-		}
-	}
 	input := core.GetAllMessagesInput{}
 	if status != "" {
 		switch status {
@@ -89,7 +83,6 @@ func (a *API) serveGetMessages(w http.ResponseWriter, r *http.Request) {
 			render.Render(w, r, NewErrorResp(NewBadRequestError("invalid status")))
 			return
 		}
-		input.Status = core.MessageStatus(status)
 	}
 
 	messages, err := a.Service.GetAllMessages(r.Context(), input)
