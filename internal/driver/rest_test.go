@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/ghazlabs/wa-scheduler/internal/core"
+	"github.com/stretchr/testify/assert"
 )
 
 type mockService struct{}
@@ -15,7 +16,16 @@ type mockService struct{}
 func (m *mockService) InitializeService(ctx context.Context) {}
 
 func (m *mockService) GetAllMessages(ctx context.Context, input core.GetAllMessagesInput) ([]core.Message, error) {
-	return []core.Message{}, nil
+	if input.Status == "" {
+		return []core.Message{
+			{ID: "test-1", Status: core.MessageStatusFailed},
+			{ID: "test-2", Status: core.MessageStatusSent},
+			{ID: "test-3", Status: core.MessageStatusScheduled},
+		}, nil
+	}
+	return []core.Message{
+		{ID: "test-test-1", Status: input.Status},
+	}, nil
 }
 
 func (m *mockService) SendMessage(ctx context.Context, input core.ScheduleMessageInput) error {
@@ -36,7 +46,13 @@ func newTestAPI() *API {
 	return api
 }
 
-func TestGetMessages_FailedStatus_Returns200(t *testing.T) {
+func parseBody(w *httptest.ResponseRecorder) map[string]interface{} {
+	var body map[string]interface{}
+	json.NewDecoder(w.Body).Decode(&body)
+	return body
+}
+
+func TestGetMessages_FailedStatus_Returns200WithFailedMessages(t *testing.T) {
 	api := newTestAPI()
 
 	req := httptest.NewRequest(http.MethodGet, "/messages?status=failed", nil)
@@ -45,9 +61,14 @@ func TestGetMessages_FailedStatus_Returns200(t *testing.T) {
 
 	api.serveGetMessages(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", w.Code)
-	}
+	body := parseBody(w)
+	data := body["data"].([]interface{})
+	firstMessage := data[0].(map[string]interface{})
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.True(t, body["ok"].(bool))
+	assert.NotEmpty(t, data)
+	assert.Equal(t, string(core.MessageStatusFailed), firstMessage["status"])
 }
 
 func TestGetMessages_ScheduledStatus_Returns200(t *testing.T) {
@@ -59,9 +80,13 @@ func TestGetMessages_ScheduledStatus_Returns200(t *testing.T) {
 
 	api.serveGetMessages(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", w.Code)
-	}
+	body := parseBody(w)
+	data := body["data"].([]interface{})
+	firstMessage := data[0].(map[string]interface{})
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.NotEmpty(t, data)
+	assert.Equal(t, string(core.MessageStatusScheduled), firstMessage["status"])
 }
 
 func TestGetMessages_SentStatus_Returns200(t *testing.T) {
@@ -73,9 +98,13 @@ func TestGetMessages_SentStatus_Returns200(t *testing.T) {
 
 	api.serveGetMessages(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", w.Code)
-	}
+	body := parseBody(w)
+	data := body["data"].([]interface{})
+	firstMessage := data[0].(map[string]interface{})
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.NotEmpty(t, data)
+	assert.Equal(t, string(core.MessageStatusSent), firstMessage["status"])
 }
 
 func TestGetMessages_InvalidStatus_Returns400(t *testing.T) {
@@ -87,15 +116,11 @@ func TestGetMessages_InvalidStatus_Returns400(t *testing.T) {
 
 	api.serveGetMessages(w, req)
 
-	if w.Code != http.StatusBadRequest {
-		t.Errorf("expected status 400, got %d", w.Code)
-	}
+	body := parseBody(w)
 
-	var body map[string]interface{}
-	json.NewDecoder(w.Body).Decode(&body)
-	if body["err"] == nil {
-		t.Error("expected error message in response body")
-	}
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.False(t, body["ok"].(bool))
+	assert.Equal(t, "invalid status", body["msg"])
 }
 
 func TestGetMessages_NoStatus_Returns200(t *testing.T) {
@@ -106,8 +131,8 @@ func TestGetMessages_NoStatus_Returns200(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	api.serveGetMessages(w, req)
+	body := parseBody(w)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", w.Code)
-	}
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.True(t, body["ok"].(bool))
 }

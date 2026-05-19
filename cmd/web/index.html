@@ -165,13 +165,24 @@
         <!-- Messages List -->
         <div class="bg-white rounded-lg shadow-md p-6">
           <h2 class="text-lg font-semibold mb-4">Scheduled Messages</h2>
-          <button
-            id="refreshMessages"
-            class="flex items-center text-gray-600 hover:text-gray-800"
-          >
-            <i data-feather="refresh-cw" class="h-4 w-4 mr-1"></i>
-            <span>Refresh</span>
-          </button>
+          <div class="flex items-center gap-4 mb-4">
+            <button
+              id="refreshMessages"
+              class="flex items-center text-gray-600 hover:text-gray-800"
+            >
+              <i data-feather="refresh-cw" class="h-4 w-4 mr-1"></i>
+              <span>Refresh</span>
+            </button>
+            <select
+              id="statusFilter"
+              class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="">All Status</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="sent">Sent</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
@@ -460,9 +471,10 @@
         }
       }
 
-      async function getAllMessages() {
+      async function getAllMessages(status = "") {
         try {
-          const response = await fetch("/messages", {
+          const url = status ? `/messages?status=${status}` : "/messages";
+          const response = await fetch(url, {
             method: "GET",
             headers: {
               Authorization: `Basic ${auth.token}`,
@@ -817,8 +829,9 @@
       }
 
       async function loadMessages() {
-        const messages = await getAllMessages();
-        renderMessagesList(messages);
+         const status = document.getElementById("statusFilter").value;
+         const messages = await getAllMessages(status);
+         renderMessagesList(messages);
       }
 
       const updateRetryType = (type) => {
@@ -960,6 +973,13 @@
         document
           .getElementById("refreshMessages")
           .addEventListener("click", () => {
+            loadMessages();
+          });
+
+        // Status filter change
+        document
+          .getElementById("statusFilter")
+          .addEventListener("change", () => {
             loadMessages();
           });
 
