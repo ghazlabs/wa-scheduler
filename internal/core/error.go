@@ -9,4 +9,5 @@ var (
 	ErrCodeInternalError = errors.New("ERR_INTERNAL_ERROR")
 	ErrSessionExpired    = errors.New("ERR_SESSION_EXPIRED")
 	ErrMessageNotFound   = errors.New("ERR_MESSAGE_NOT_FOUND")
+	ErrRetryNonFailed    = errors.New("ERR_RETRY_NON_FAILED")
 )

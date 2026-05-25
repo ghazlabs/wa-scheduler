@@ -5,8 +5,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ghazlabs/wa-scheduler/internal/core"
 	"github.com/go-chi/render"
 )
+
+const retryNonFailedMessage = "message can only be retried when status is failed"
 
 type RespBody struct {
 	StatusCode int         `json:"-"`
@@ -34,7 +37,12 @@ func NewSuccessResp(data interface{}) *RespBody {
 func NewErrorResp(err error) *RespBody {
 	var restErr *Error
 	if !errors.As(err, &restErr) {
-		restErr = NewInternalServerError(err)
+		switch {
+		case errors.Is(err, core.ErrRetryNonFailed):
+			restErr = NewBadRequestError(retryNonFailedMessage)
+		default:
+			restErr = NewInternalServerError(err)
+		}
 	}
 
 	return &RespBody{

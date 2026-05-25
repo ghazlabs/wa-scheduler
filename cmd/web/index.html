@@ -19,6 +19,37 @@
       href="https://cdn.jsdelivr.net/npm/choices.js@11.1.0/public/assets/styles/choices.min.css"
       rel="stylesheet"
     />
+
+    <style>
+    #toast-container {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .toast {
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      animation: slideIn 0.3s ease;
+      min-width: 250px;
+    }
+    .toast-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .toast-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .toast-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
   </head>
 
   <body class="bg-gray-100 min-h-screen">
@@ -164,14 +195,20 @@
 
         <!-- Messages List -->
         <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-lg font-semibold mb-4">Scheduled Messages</h2>
-          <button
-            id="refreshMessages"
-            class="flex items-center text-gray-600 hover:text-gray-800"
-          >
-            <i data-feather="refresh-cw" class="h-4 w-4 mr-1"></i>
-            <span>Refresh</span>
-          </button>
+          <h2 class="text-lg font-semibold">Scheduled Messages</h2>
+          <div class="flex justify-between items-center mb-4 w-full">
+            <div class="flex items-center bg-gray-100 rounded-lg p-1 gap-0.5">
+              <button data-status="" class="status-filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all bg-white shadow-sm text-gray-800">All</button>
+              <button data-status="scheduled" class="status-filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-500 hover:text-gray-700">Scheduled</button>
+              <button data-status="sent" class="status-filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-500 hover:text-gray-700">Sent</button>
+              <button data-status="failed" class="status-filter-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-500 hover:text-gray-700">Failed</button>
+            </div>
+            <button id="refreshMessages" class="flex items-center text-gray-600 hover:text-gray-800">
+              <i data-feather="refresh-cw" class="h-4 w-4 mr-1"></i>
+              <span>Refresh</span>
+            </button>
+          </div>
+
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
@@ -328,6 +365,8 @@
       </div>
     </div>
 
+    <div id="toast-container"></div>
+
     <script>
       const IMMEDIATE_RETRY_TYPE = "immmediate";
       const SCHEDULED_RETRY_TYPE = "scheduled";
@@ -460,9 +499,10 @@
         }
       }
 
-      async function getAllMessages() {
+      async function getAllMessages(status = "") {
         try {
-          const response = await fetch("/messages", {
+          const url = status ? `/messages?status=${status}` : "/messages";
+          const response = await fetch(url, {
             method: "GET",
             headers: {
               Authorization: `Basic ${auth.token}`,
@@ -550,6 +590,23 @@
           console.error("Retry message error:", error);
           return false;
         }
+      }
+
+      function showToast(message, type = "success") {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        toast.className = `toast toast-${type}`;
+
+        const icon = type === "success" ? "check-circle" : type === "error" ? "alert-circle" : "info";
+        toast.innerHTML = `<i data-feather="${icon}" class="w-4 h-4 flex-shrink-0"></i> ${message}`;
+        container.appendChild(toast);
+        feather.replace();
+
+        setTimeout(() => {
+          toast.style.transition = "opacity 0.3s ease";
+          toast.style.opacity = "0";
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
       }
 
       // UI Functions
@@ -706,6 +763,19 @@
           });
         }
       }
+      // Status filter pills
+      document.querySelectorAll(".status-filter-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          currentStatus = btn.getAttribute("data-status");
+          document.querySelectorAll(".status-filter-btn").forEach((b) => {
+            b.classList.remove("bg-white", "shadow-sm", "text-gray-800");
+            b.classList.add("text-gray-500");
+          });
+          btn.classList.add("bg-white", "shadow-sm", "text-gray-800");
+          btn.classList.remove("text-gray-500");
+          loadMessages();
+        });
+      });
 
       function showRetryModal(messageId) {
         document.getElementById("retryMessageId").value = messageId;
@@ -816,8 +886,9 @@
         });
       }
 
+      let currentStatus = "";
       async function loadMessages() {
-        const messages = await getAllMessages();
+        const messages = await getAllMessages(currentStatus);
         renderMessagesList(messages);
       }
 
@@ -985,17 +1056,17 @@
             );
 
             if (recipientNumbers.length === 0) {
-              alert("Please select at least one recipient");
+              showToast("Please select at least one recipient", "error")
               return;
             }
 
             if (!content) {
-              alert("Please enter a message content");
+              showToast("Please enter a message content", "error")
               return;
             }
 
             if (isNaN(scheduledSendingAt)) {
-              alert("Please select a valid date and time");
+              showToast("Please select a valid date and time", "error")
               return;
             }
 
@@ -1005,14 +1076,14 @@
               scheduledSendingAt
             );
             if (success) {
-              alert("Message scheduled successfully");
+              showToast("Message scheduled successfully")
 
               document.getElementById("scheduleForm").reset();
               choices.removeActiveItems();
 
               await loadMessages();
             } else {
-              alert("Failed to schedule message");
+              showToast("Failed to schedule message", "error")
             }
           });
 
@@ -1072,18 +1143,18 @@
 
               // Check if scheduled time is in the past
               if (scheduledSendingAt < Math.floor(Date.now() / 1000)) {
-                alert("Scheduled time cannot be in the past");
+                showToast("Scheduled time cannot be in the past", "error")
                 return;
               }
             }
 
             const success = await retryMessage(messageId, scheduledSendingAt);
             if (success) {
-              alert("Message retry scheduled successfully");
+              showToast("Message retry scheduled successfully")
               document.getElementById("retryModal").classList.add("hidden");
               await loadMessages();
             } else {
-              alert("Failed to schedule message retry");
+              showToast("Failed to schedule message retry", "error")
             }
 
             updateRetryType(IMMEDIATE_RETRY_TYPE);
