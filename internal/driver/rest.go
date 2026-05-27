@@ -139,6 +139,12 @@ func (a *API) serveRetryMessage(w http.ResponseWriter, r *http.Request) {
 		ScheduledSendingAt: req.ScheduledSendingAt,
 	})
 	if err != nil {
+
+		if err == core.ErrMessageNotFound {
+			render.Render(w, r, NewErrorResp(NewNotFoundError("message id not found")))
+			return
+		}
+
 		render.Render(w, r, NewErrorResp(err))
 		return
 	}

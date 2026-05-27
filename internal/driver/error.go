@@ -47,3 +47,11 @@ func NewInvalidCredsError() *Error {
 		Message:    "invalid credentials",
 	}
 }
+
+func NewNotFoundError(msg string) *Error {
+	return &Error{
+		StatusCode: http.StatusNotFound,
+		Err:        "ERR_MESSAGES_NOT_FOUND",
+		Message:    msg,
+	}
+}

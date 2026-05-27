@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/ghazlabs/wa-scheduler/internal/core"
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,6 +25,7 @@ func (m *mockService) GetAllMessages(ctx context.Context, input core.GetAllMessa
 			{ID: "test-3", Status: core.MessageStatusScheduled},
 		}, nil
 	}
+
 	return []core.Message{
 		{ID: "test-1", Status: input.Status},
 		{ID: "test-2", Status: input.Status},
@@ -34,6 +37,9 @@ func (m *mockService) SendMessage(ctx context.Context, input core.ScheduleMessag
 }
 
 func (m *mockService) RetryMessage(ctx context.Context, input core.RetryMessageInput) error {
+	if input.ID == "200" {
+		return core.ErrMessageNotFound
+	}
 	return nil
 }
 
@@ -44,6 +50,7 @@ func newTestAPI() *API {
 		ClientPassword:     "admin",
 		WebClientPublicDir: ".",
 	})
+
 	return api
 }
 
@@ -104,6 +111,7 @@ func TestGetAllMessages(t *testing.T) {
 
 			req := httptest.NewRequest(http.MethodGet, tc.query, nil)
 			req.SetBasicAuth("admin", "admin")
+
 			w := httptest.NewRecorder()
 
 			api.serveGetMessages(w, req)
@@ -127,6 +135,77 @@ func TestGetAllMessages(t *testing.T) {
 					msg := item.(map[string]interface{})
 					assert.Equal(t, tc.expectedMsgStatus, msg["status"])
 				}
+			}
+		})
+	}
+}
+
+func TestRetryMessage(t *testing.T) {
+	tests := []struct {
+		name           string
+		messageID      string
+		expectedStatus int
+		expectedOK     bool
+		expectedErr    string
+		expectedMsg    string
+	}{
+		{
+			name:           "message not found",
+			messageID:      "200",
+			expectedStatus: http.StatusNotFound,
+			expectedOK:     false,
+			expectedErr:    "ERR_MESSAGES_NOT_FOUND",
+			expectedMsg:    "message id not found",
+		},
+		{
+			name:           "message found",
+			messageID:      "1",
+			expectedStatus: http.StatusOK,
+			expectedOK:     true,
+			expectedErr:    "",
+			expectedMsg:    "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			api := newTestAPI()
+
+			reqBody := RetryMessageRequest{
+				ScheduledSendingAt: 1234567890,
+			}
+
+			jsonBody, _ := json.Marshal(reqBody)
+
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/messages/"+tt.messageID+"/retry",
+				bytes.NewBuffer(jsonBody),
+			)
+
+			req.SetBasicAuth("admin", "admin")
+
+			rctx := chi.NewRouteContext()
+			rctx.URLParams.Add("id", tt.messageID)
+
+			req = req.WithContext(
+				context.WithValue(req.Context(), chi.RouteCtxKey, rctx),
+			)
+
+			w := httptest.NewRecorder()
+
+			api.serveRetryMessage(w, req)
+
+			body := parseBody(w)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+			assert.Equal(t, tt.expectedOK, body["ok"])
+
+			if tt.expectedErr != "" {
+				assert.Equal(t, tt.expectedErr, body["err"])
+			}
+			if tt.expectedMsg != "" {
+				assert.Equal(t, tt.expectedMsg, body["msg"])
 			}
 		})
 	}
